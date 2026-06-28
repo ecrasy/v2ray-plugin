@@ -21,7 +21,7 @@ import (
 	vlog "github.com/v2fly/v2ray-core/v5/app/log"
 	clog "github.com/v2fly/v2ray-core/v5/common/log"
 
-	"github.com/teddysun/v2ray-plugin/cmd/build"
+	"github.com/ecrasy/v2ray-plugin/cmd/build"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common/net"

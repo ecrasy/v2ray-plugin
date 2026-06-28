@@ -1,4 +1,4 @@
-module github.com/teddysun/v2ray-plugin
+module github.com/ecrasy/v2ray-plugin
 
 go 1.25.5
 

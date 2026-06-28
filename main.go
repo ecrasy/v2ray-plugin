@@ -21,6 +21,7 @@ import (
 	vlog "github.com/v2fly/v2ray-core/v5/app/log"
 	clog "github.com/v2fly/v2ray-core/v5/common/log"
 
+	"github.com/teddysun/v2ray-plugin/cmd/build"
 	"github.com/v2fly/v2ray-core/v5/app/dispatcher"
 	"github.com/v2fly/v2ray-core/v5/app/proxyman"
 	"github.com/v2fly/v2ray-core/v5/common/net"
@@ -81,7 +82,7 @@ func readCertificate() ([]byte, error) {
 		fixedCert := certHead + "\n" + *certRaw + "\n" + certTail
 		return []byte(fixedCert), nil
 	}
-	panic("thou shalt not reach hear")
+	panic("thou shalt not reach here")
 }
 
 func logConfig(logLevel string) *vlog.Config {
@@ -153,12 +154,13 @@ func generateConfig() (*core.Config, error) {
 	}
 
 	// hack v2ray-core grpc protocolName
-	if *mode == "grpc" {
-		*mode = "gun"
+	protocolName := *mode
+	if protocolName == "grpc" {
+		protocolName = "gun"
 	}
 
 	streamConfig := internet.StreamConfig{
-		ProtocolName: *mode,
+		ProtocolName: protocolName,
 		TransportSettings: []*internet.TransportConfig{{
 			ProtocolName: *mode,
 			Settings:     serial.ToTypedMessage(transportSettings),
@@ -274,8 +276,10 @@ func generateConfig() (*core.Config, error) {
 func startV2Ray() (core.Server, error) {
 
 	opts, err := parseEnv()
-
-	if err == nil {
+	if err != nil {
+		logWarn("failed to parse env options:", err)
+	}
+	if opts != nil {
 		if c, b := opts.Get("mode"); b {
 			*mode = c
 		}
@@ -382,15 +386,29 @@ func printCoreVersion() {
 }
 
 func printVersion() {
+	osVersion, osKernel := build.GetOSVersion()
+	if osVersion == "" {
+		osVersion = "unknown"
+	}
+	if osKernel == "" {
+		osKernel = "unknown"
+	}
+
+	arch := build.GetArch()
+
 	fmt.Println("v2ray-plugin", VERSION)
-	fmt.Println("Go version", runtime.Version())
 	fmt.Println("Yet another SIP003 plugin for shadowsocks")
+	fmt.Printf("- os/version: %s\n", osVersion)
+	fmt.Printf("- os/kernel: %s\n", osKernel)
+	fmt.Printf("- os/type: %s\n", runtime.GOOS)
+	fmt.Printf("- os/arch: %s\n", arch)
+	fmt.Printf("- go/version: %s\n", runtime.Version())
 }
 
 func main() {
 	flag.Parse()
 
-	if *version {
+	if *version || (len(flag.Args()) > 0 && flag.Args()[0] == "version") {
 		printVersion()
 		return
 	}
@@ -419,7 +437,7 @@ func main() {
 
 	{
 		osSignals := make(chan os.Signal, 1)
-		signal.Notify(osSignals, os.Interrupt, os.Kill, syscall.SIGTERM)
+		signal.Notify(osSignals, os.Interrupt, syscall.SIGTERM)
 		<-osSignals
 	}
 }
